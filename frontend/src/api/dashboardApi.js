@@ -1,5 +1,5 @@
 import axios from "axios";
-const BASE_URL = "http://localhost:5000/api/dashboard";
+const BASE_URL = "http://localhost:3000/api/dashboard";
 
 export const getMonthlyBudget = (year) => 
     axios.get(`${BASE_URL}/monthly-budget/${year}`,{

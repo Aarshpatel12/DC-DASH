@@ -1,18 +1,56 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 function SubNavbar() {
+  // State to handle dropdown visibility
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Array of all 15 departments + DC Main Dashboard
+  const departments = [
+    "Health", "Education", "MNREGA", "Agriculture", "Police", "PWD",
+    "Finance", "Environment", "Water", "Urban", "Labour", "WCD",
+    "Social", "IT", "Disaster", "DC"
+  ];
+
   return (
     <div className="w-full bg-blue-600 text-white shadow-sm">
-
-      <div className="max-w-7xl mx-auto flex gap-6 px-6 py-2">
-
+      <div className="max-w-7xl mx-auto flex gap-6 px-6 py-2 items-center">
+        
         <Link
           to="/"
           className="hover:bg-blue-800 px-4 py-2 rounded transition"
         >
           DC Dashboard
         </Link>
+
+        {/* --- Departments Dropdown --- */}
+        <div className="relative">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="hover:bg-blue-800 px-4 py-2 rounded transition focus:outline-none flex items-center gap-1"
+          >
+            Departments <span>▾</span>
+          </button>
+
+          {/* Dropdown Menu */}
+          {isDropdownOpen && (
+            <div className="absolute left-0 mt-2 w-56 bg-white text-gray-800 shadow-xl rounded-md z-50 max-h-80 overflow-y-auto border border-gray-100">
+              {departments.map((dept, index) => (
+                <Link
+                  key={index}
+                  // This one line automatically routes every department to match your App.jsx routes perfectly!
+                  // Example: "IT" -> "/it-dashboard", "Water" -> "/water-dashboard"
+                  to={dept === "DC" ? "/dashboard" : `/${dept.toLowerCase()}-dashboard`} 
+                  onClick={() => setIsDropdownOpen(false)} // Closes dropdown on click
+                  className="block px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-700 transition border-b border-gray-50 last:border-0"
+                >
+                  {dept}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* --------------------------- */}
 
         <Link
           to="/star-marked"
@@ -36,7 +74,6 @@ function SubNavbar() {
         </Link>
 
       </div>
-
     </div>
   );
 }

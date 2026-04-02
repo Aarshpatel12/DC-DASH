@@ -53,7 +53,7 @@
 // }
 
 
-
+import { Link } from "react-router-dom";
 import { useState } from "react";
 
  import ProfileNavbar from "../common/ProfileNavbar";
@@ -94,18 +94,25 @@ export default function Dashboard() {
         
     <div className="p-8">
 
-      {/* 🎨 Color Picker */}
-      <div className="mb-6">
-        <label className="font-semibold mr-3">
-          Choose Graph Color:
-        </label>
-        <input
-          type="color"
-          value={chartColor}
-          onChange={(e) => setChartColor(e.target.value)}
-        />
-      </div>
+     {/* 🎨 Header section with Color Picker & Edit Button */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <label className="font-semibold mr-3">Choose Graph Color:</label>
+          <input
+            type="color"
+            value={chartColor}
+            onChange={(e) => setChartColor(e.target.value)}
+          />
+        </div>
 
+        {/* --- ADDED EDIT BUTTON --- */}
+        <Link 
+          to="/edit-dashboard" 
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+        >
+          ✏️ Edit Data
+        </Link>
+      </div>
       <div className="grid grid-cols-3 gap-6">
 
         {/* Pie Chart */}
