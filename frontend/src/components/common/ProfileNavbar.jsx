@@ -7,7 +7,7 @@ function ProfileNavbar({ toggleSidebar }) {
     <div className="h-16 bg-blue-700 text-white flex justify-between items-center px-6 shadow-md">
       
       {/* Left Side */}
-      <h1 className="text-lg font-bold">MNREGA Dashboard</h1>
+      <h1 className="text-lg font-bold">DC Dashboard</h1>
 
       {/* Right Side */}
       <div className="flex items-center gap-6">

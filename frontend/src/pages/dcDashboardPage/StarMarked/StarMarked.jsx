@@ -351,7 +351,7 @@ const { metrics, chartData, filteredTableData, uniqueOfficers, uniquePriorities,
                           </td>
                           
                           <td className="px-2 py-1 min-w-[100px]">{isEditing ? <input className={inputClass} value={editFormData[" Received From"]} onChange={(e) => handleEditChange(e, " Received From")} /> : row[" Received From"]}</td>
-                          <td className="px-2 py-1 min-w-[80px]">{isEditing ? <input className={inputClass} value={editFormData.File} onChange={(e) => handleEditChange(e, "File")} /> : (row.File ? "📎 Link" : "")}</td>
+                          <td className="px-2 py-1 min-w-[80px]">{isEditing ? <input className={inputClass} value={editFormData.File} onChange={(e) => handleEditChange(e, "File")} /> : (row.File ? <a href={row.File} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-semibold">📎 Open File</a> : "")}</td>
                           <td className="px-2 py-1 min-w-[80px]">{isEditing ? <input className={inputClass} value={editFormData["Entry Date"]} onChange={(e) => handleEditChange(e, "Entry Date")} /> : row["Entry Date"]}</td>
                           <td className="px-2 py-1 min-w-[80px]">{isEditing ? <input className={inputClass} value={editFormData.Deadline} onChange={(e) => handleEditChange(e, "Deadline")} /> : (row.Deadline || "-")}</td>
                           
@@ -364,7 +364,7 @@ const { metrics, chartData, filteredTableData, uniqueOfficers, uniquePriorities,
                           
                           <td className="px-2 py-1 min-w-[100px]">{isEditing ? <input className={inputClass} value={editFormData["Response Recieved"]} onChange={(e) => handleEditChange(e, "Response Recieved")} /> : row["Response Recieved"]}</td>
                           <td className="px-2 py-1 min-w-[150px] max-w-[200px]">{isEditing ? <input className={inputClass} value={editFormData.Remarks} onChange={(e) => handleEditChange(e, "Remarks")} /> : <div className="truncate" title={row.Remarks}>{row.Remarks}</div>}</td>
-                          <td className="px-2 py-1 min-w-[100px]">{isEditing ? <input className={inputClass} value={editFormData["File of response received"]} onChange={(e) => handleEditChange(e, "File of response received")} /> : (row["File of response received"] ? "📎 Link" : "")}</td>
+                          <td className="px-2 py-1 min-w-[100px]">{isEditing ? <input className={inputClass} value={editFormData["File of response received"]} onChange={(e) => handleEditChange(e, "File of response received")} /> : (row["File of response received"] ? <a href={row["File of response received"]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-semibold">📎 Open File</a> : "")}</td>
 
                         </tr>
                       );

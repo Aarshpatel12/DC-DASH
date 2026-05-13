@@ -23,6 +23,45 @@ function LoginPage() {
             navigate("/dashboard");
         } else if (cleanEmail === "health@masterdashboard.gov") {
             navigate("/health-dashboard");
+        
+
+        } else if (cleanEmail === "dbee@masterdashboard.gov") {
+            navigate("/dbee-dashboard");
+        } else if (cleanEmail === "rseti@masterdashboard.gov") {
+            navigate("/rseti-dashboard");
+        } else if (cleanEmail === "ruraldev@masterdashboard.gov") {
+            navigate("/ruraldev-dashboard");
+        } else if (cleanEmail === "cao@masterdashboard.gov") {
+            navigate("/cao-dashboard");
+        } else if (cleanEmail === "animalhusbandry@masterdashboard.gov") {
+            navigate("/animalhusbandry-dashboard");
+        } else if (cleanEmail === "peda@masterdashboard.gov") {
+            navigate("/peda-dashboard");
+        } else if (cleanEmail === "fisheries@masterdashboard.gov") {
+            navigate("/fisheries-dashboard");
+        } else if (cleanEmail === "dairy@masterdashboard.gov") {
+            navigate("/dairy-dashboard");
+        } else if (cleanEmail === "horticulture@masterdashboard.gov") {
+            navigate("/horticulture-dashboard");
+        } else if (cleanEmail === "cooperatives@masterdashboard.gov") {
+            navigate("/cooperatives-dashboard");
+        } else if (cleanEmail === "markfed@masterdashboard.gov") {
+            navigate("/markfed-dashboard");
+        } else if (cleanEmail === "dcpo@masterdashboard.gov") {
+            navigate("/dcpo-dashboard");
+        } else if (cleanEmail === "dsso@masterdashboard.gov") {
+            navigate("/dsso-dashboard");
+        } else if (cleanEmail === "dswo@masterdashboard.gov") {
+            navigate("/dswo-dashboard");
+        } else if (cleanEmail === "dpo@masterdashboard.gov") {
+            navigate("/dpo-dashboard");
+        } else if (cleanEmail === "healthindicators@masterdashboard.gov") {
+            navigate("/healthindicators-dashboard");
+        } else if (cleanEmail === "deaddiction@masterdashboard.gov") {
+            navigate("/deaddiction-dashboard");
+        
+
+            
         } else if (cleanEmail === "education@masterdashboard.gov") {
             navigate("/education-dashboard");
         } else if (cleanEmail === "mnrega@masterdashboard.gov") { 

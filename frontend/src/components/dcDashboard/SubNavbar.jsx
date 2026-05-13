@@ -5,11 +5,14 @@ function SubNavbar() {
   // State to handle dropdown visibility
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Array of all 15 departments + DC Main Dashboard
+  // Array of all departments + DC Main Dashboard
   const departments = [
-    "Health", "Education", "MNREGA", "Agriculture", "Police", "PWD",
-    "Finance", "Environment", "Water", "Urban", "Labour", "WCD",
-    "Social", "IT", "Disaster", "DC"
+    "Health", "Education", "MNREGA", "Agriculture", 
+    
+     
+    "DBEE", "RSETI", "Animal Husbandry", 
+    "Fisheries", "Dairy", "Cooperatives", "Markfed", 
+    "DCPO", "DSSO", "DSWO", "DPO", "Health Indicator", "Deaddiction"
   ];
 
   return (
@@ -17,7 +20,7 @@ function SubNavbar() {
       <div className="max-w-7xl mx-auto flex gap-6 px-6 py-2 items-center">
         
         <Link
-          to="/"
+          to="/dashboard"
           className="hover:bg-blue-800 px-4 py-2 rounded transition"
         >
           DC Dashboard
@@ -38,9 +41,8 @@ function SubNavbar() {
               {departments.map((dept, index) => (
                 <Link
                   key={index}
-                  // This one line automatically routes every department to match your App.jsx routes perfectly!
-                  // Example: "IT" -> "/it-dashboard", "Water" -> "/water-dashboard"
-                  to={dept === "DC" ? "/dashboard" : `/${dept.toLowerCase()}-dashboard`} 
+                  // This dynamically creates routes like "/fisheries-dashboard" or "/animalhusbandry-dashboard"
+                  to={dept === "DC" ? "/dashboard" : `/${dept.toLowerCase().replace(/\s+/g, '')}-dashboard`} 
                   onClick={() => setIsDropdownOpen(false)} // Closes dropdown on click
                   className="block px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-700 transition border-b border-gray-50 last:border-0"
                 >

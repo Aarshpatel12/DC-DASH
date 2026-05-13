@@ -30,6 +30,14 @@ import WcdDashboard from "./pages/WcdDashboard";
 import SocialDashboard from "./pages/SocialDashboard";
 import ItDashboard from "./pages/ItDashboard";
 import DisasterDashboard from "./pages/DisasterDashboard";
+import DbeeDashboard from './pages/DbeeDashboard';
+import AnimalHusbandryDashboard from './pages/AnimalHusbandryDashboard';
+import CooperativesDashboard from './pages/CooperativesDashboard';
+import DairyDashboard from './pages/DairyDashboard';
+import FisheriesDashboard from './pages/FisheriesDashboard';
+import MarkfedDashboard from './pages/MarkfedDashboard';
+import RsetiDashboard from "./pages/RsetiDashboard";
+import HealthIndicatorDashboard from "./pages/HealthIndicatorDashboard";
 
 function App() {
   return (
@@ -61,8 +69,17 @@ function App() {
         <Route path="/wcd-dashboard" element={<WcdDashboard />} />
         <Route path="/social-dashboard" element={<SocialDashboard />} />
         <Route path="/it-dashboard" element={<ItDashboard />} />
+        <Route path="/dbee-dashboard" element={<DbeeDashboard />} />
         <Route path="/disaster-dashboard" element={<DisasterDashboard />} />
+        <Route path="/animalhusbandry-dashboard" element={<AnimalHusbandryDashboard />} />
+        <Route path="/cooperatives-dashboard" element={<CooperativesDashboard />} />
+        <Route path="/dairy-dashboard" element={<DairyDashboard />} />
+<Route path="/fisheries-dashboard" element={<FisheriesDashboard />} />
+<Route path="/markfed-dashboard" element={<MarkfedDashboard />} />
+<Route path="/rseti-dashboard" element={<RsetiDashboard />} />
+<Route path="/healthindicator-dashboard" element={<HealthIndicatorDashboard />} />
       </Routes>
+      
     </Router>
   );
 }

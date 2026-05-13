@@ -3,24 +3,24 @@ import ProfileNavbar from "../components/common/ProfileNavbar.jsx";
 import ProfileSidebar from "../components/common/ProfileSidebar.jsx";
 import Papa from 'papaparse';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid, LineChart, Line, Cell
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid, Cell
 } from 'recharts';
 
 // =========================================================================
-const DASHBOARD_TITLE = "MNREGA Financial Dashboard";
+const DASHBOARD_TITLE = "RSETI Training Dashboard";
 
-// 🛑 1. PASTE YOUR MNREGA GOOGLE SHEET ID HERE 🛑
+// 🛑 1. PASTE YOUR RSETI GOOGLE SHEET ID HERE 🛑
 // (Upload the CSV you provided to Google Sheets and grab the ID)
-const SHEET_ID = "18QJ7412AYcpP4L07pb3YNgVBR4o31rVzWa4EOSR1v5Y"; 
+const SHEET_ID = "1Msf90xmsEcC9UY1bIl5WPOyNRMn6hHYppZ5TV-BRGnQ"; 
 
 const TABS = [
-  { name: "Block-wise Financial Report", gid: "0" } // Update GID if needed
+  { name: "Training Program Report", gid: "0" } // Update GID if needed
 ];
 
-const COLORS = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6", "#06b6d4"];
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
 // =========================================================================
 
-function MnregaDashboard() {
+function RsetiDashboard() {
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState([]);
@@ -61,82 +61,102 @@ function MnregaDashboard() {
   }, [activeTab]);
 
   // ==============================================================
-  // MNREGA FINANCIAL ENGINE (Cleans database headers & extracts math)
+  // RSETI ENGINE (Groups recurring programs & calculates totals)
   // ==============================================================
   const analytics = useMemo(() => {
     if (!data || !Array.isArray(data) || data.length === 0) return null;
 
     const extractNumber = (val) => {
         if (!val) return 0;
-        let cleanStr = String(val).replace(/,/g, '').trim();
-        const match = cleanStr.match(/(-?\d+(\.\d+)?)/); // Handles negative balances like -4.41
+        const cleanStr = String(val).replace(/,/g, '').trim();
+        const match = cleanStr.match(/(\d+(\.\d+)?)/);
         return match && match[0] ? parseFloat(match[0]) : 0;
     };
 
-    // 1. Find Header Row (Looking for "block_name" or "fund")
+    // 1. Find Header Row (Looking for "Name of the Programme")
     const headerIdx = data.findIndex(row => {
         if (!row || !Array.isArray(row)) return false;
-        return row.some(cell => String(cell || "").toLowerCase().includes("block_name") || String(cell || "").toLowerCase().includes("expenditure"));
+        return row.some(cell => String(cell || "").toLowerCase().includes("name of the programme"));
     });
 
     if (headerIdx === -1) return null;
-    
-    // Clean up raw database headers (trim spaces)
     const headers = data[headerIdx].map(h => String(h || "").trim());
 
-    // 2. Map Key Financial Columns
-    let labelColIdx = headers.findIndex(h => h.toLowerCase().includes("block"));
-    let fundColIdx = headers.findIndex(h => h.toLowerCase() === "total_fund_available");
-    let expColIdx = headers.findIndex(h => h.toLowerCase() === "total_expenditure" || h.toLowerCase() === "actual_expenditure");
-    let balColIdx = headers.findIndex(h => h.toLowerCase() === "balance_amount");
-    let dueColIdx = headers.findIndex(h => h.toLowerCase() === "payment_due");
+    // 2. Map Key Columns
+    let nameColIdx = headers.findIndex(h => h.toLowerCase().includes("programme") || h.toLowerCase().includes("program"));
+    let startColIdx = headers.findIndex(h => h.toLowerCase().includes("start"));
+    let endColIdx = headers.findIndex(h => h.toLowerCase().includes("end"));
+    let daysColIdx = headers.findIndex(h => h.toLowerCase().includes("days"));
+    let traineeColIdx = headers.findIndex(h => h.toLowerCase().includes("trainee"));
 
-    if (labelColIdx === -1) labelColIdx = 0;
+    // Fallbacks
+    if (nameColIdx === -1) nameColIdx = 1;
+    if (daysColIdx === -1) daysColIdx = 4;
+    if (traineeColIdx === -1) traineeColIdx = 5;
 
     const tableRows = [];
-    const topMetrics = { totalFund: 0, totalExp: 0, totalBal: 0, totalDue: 0 };
+    const groupedPrograms = {};
+    const topMetrics = { totalBatches: 0, totalTrainees: 0, totalDays: 0, uniquePrograms: 0 };
 
     for (let i = headerIdx + 1; i < data.length; i++) {
         const row = data[i];
         if (!row || !Array.isArray(row)) continue;
 
-        const label = String(row[labelColIdx] || "").trim();
+        const rawName = String(row[nameColIdx] || "").trim();
         
-        if (label && !label.toLowerCase().includes("total") && label !== "") {
-            const fund = fundColIdx > -1 ? extractNumber(row[fundColIdx]) : 0;
-            const exp = expColIdx > -1 ? extractNumber(row[expColIdx]) : 0;
-            const bal = balColIdx > -1 ? extractNumber(row[balColIdx]) : 0;
-            const due = dueColIdx > -1 ? extractNumber(row[dueColIdx]) : 0;
+        if (rawName && !rawLabelIsTotal(rawName)) {
+            const days = extractNumber(row[daysColIdx]);
+            const trainees = extractNumber(row[traineeColIdx]);
 
+            // Add to Raw Table Rows
             tableRows.push({
-                name: label,
-                fund: fund,
-                exp: exp,
-                bal: bal,
-                due: due,
+                name: rawName,
+                start: startColIdx > -1 ? String(row[startColIdx]).trim() : "-",
+                end: endColIdx > -1 ? String(row[endColIdx]).trim() : "-",
+                days: days,
+                trainees: trainees,
                 rawRow: row
             });
             
-            topMetrics.totalFund += fund;
-            topMetrics.totalExp += exp;
-            topMetrics.totalBal += bal;
-            topMetrics.totalDue += due;
+            // Group data for charts (Merge recurring programs like "General EDP")
+            if (!groupedPrograms[rawName]) {
+                groupedPrograms[rawName] = { 
+                    name: rawName, 
+                    shortName: rawName.length > 20 ? rawName.substring(0, 20) + "..." : rawName,
+                    totalTrainees: 0, 
+                    totalDays: 0, 
+                    batchCount: 0 
+                };
+                topMetrics.uniquePrograms += 1;
+            }
+            
+            groupedPrograms[rawName].totalTrainees += trainees;
+            groupedPrograms[rawName].totalDays += days;
+            groupedPrograms[rawName].batchCount += 1;
+
+            // Global Metrics
+            topMetrics.totalBatches += 1;
+            topMetrics.totalTrainees += trainees;
+            topMetrics.totalDays += days;
         }
     }
 
     if (tableRows.length === 0) return null;
 
-    // Sort chart data alphabetically by Block
-    const chartData = [...tableRows].sort((a, b) => a.name.localeCompare(b.name));
+    // Sort grouped data for charts (Top 12 by Total Trainees)
+    const chartData = Object.values(groupedPrograms)
+        .sort((a, b) => b.totalTrainees - a.totalTrainees)
+        .slice(0, 12);
     
     const filteredRows = tableRows.filter(r => r.name.toLowerCase().includes((searchQuery || "").toLowerCase()));
 
-    // Helper to make database keys look pretty in the table (e.g. "total_expenditure" -> "Total Expenditure")
-    const formatHeader = (str) => str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    function rawLabelIsTotal(str) {
+        return str.toLowerCase() === "total" || str.toLowerCase() === "grand total";
+    }
 
     return { 
         headers, tableRows, chartData, filteredRows, topMetrics, 
-        labelColIdx, formatHeader 
+        nameColIdx, startColIdx, endColIdx, daysColIdx, traineeColIdx 
     };
   }, [data, searchQuery]);
 
@@ -153,7 +173,7 @@ function MnregaDashboard() {
           <div className="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-xl shadow-sm border border-gray-200">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 tracking-tight">{DASHBOARD_TITLE}</h1>
-              <p className="text-sm text-gray-500 mt-1">Block-wise Fund Allocation & Expenditure</p>
+              <p className="text-sm text-gray-500 mt-1">Skill Development & Training Analytics</p>
             </div>
             
             <div className="flex items-center gap-4 mt-4 md:mt-0 flex-wrap justify-end">
@@ -183,7 +203,7 @@ function MnregaDashboard() {
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center h-64 text-xl font-bold text-blue-600">Loading MNREGA Financials...</div>
+            <div className="flex justify-center items-center h-64 text-xl font-bold text-blue-600">Loading RSETI Data...</div>
           ) : errorMsg ? (
             <div className="bg-red-50 text-red-700 p-6 rounded-lg font-bold border border-red-200 text-center">⚠️ {errorMsg}</div>
           ) : analytics ? (
@@ -191,50 +211,46 @@ function MnregaDashboard() {
             <>
               {/* Top Metric Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard title="Total Fund Available" value={analytics.topMetrics.totalFund.toLocaleString(undefined, {maximumFractionDigits: 2})} color="text-gray-700" />
-                <MetricCard title="Total Expenditure" value={analytics.topMetrics.totalExp.toLocaleString(undefined, {maximumFractionDigits: 2})} color="text-blue-600" />
-                <MetricCard 
-                    title="Total Balance Amount" 
-                    value={analytics.topMetrics.totalBal.toLocaleString(undefined, {maximumFractionDigits: 2})} 
-                    color={analytics.topMetrics.totalBal < 0 ? "text-red-600" : "text-green-600"} 
-                />
-                <MetricCard title="Total Payment Due" value={analytics.topMetrics.totalDue.toLocaleString(undefined, {maximumFractionDigits: 2})} color="text-orange-500" />
+                <MetricCard title="Total Batches Conducted" value={analytics.topMetrics.totalBatches.toLocaleString()} color="text-gray-700" />
+                <MetricCard title="Total Trainees Trained" value={analytics.topMetrics.totalTrainees.toLocaleString()} color="text-blue-600" />
+                <MetricCard title="Unique Skill Programs" value={analytics.topMetrics.uniquePrograms.toLocaleString()} color="text-purple-600" />
+                <MetricCard title="Total Training Days" value={analytics.topMetrics.totalDays.toLocaleString()} color="text-green-600" />
               </div>
 
               {/* Graphical Analysis */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 
-                {/* Chart 1: Funds vs Expenditure */}
+                {/* Chart 1: Trainees by Program Type */}
                 <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                  <h2 className="text-lg font-bold text-gray-800 mb-4">Available Funds vs Expenditure by Block</h2>
+                  <h2 className="text-lg font-bold text-gray-800 mb-4">Top Programs by Total Trainees</h2>
                   <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analytics.chartData} margin={{ top: 10, right: 10, left: 10, bottom: 60 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                        <XAxis dataKey="name" tick={{fontSize: 10, fill: '#6b7280'}} axisLine={false} tickLine={false} angle={-45} textAnchor="end" />
+                        <XAxis dataKey="shortName" tick={{fontSize: 10, fill: '#6b7280'}} axisLine={false} tickLine={false} angle={-45} textAnchor="end" />
                         <YAxis tick={{fontSize: 10, fill: '#6b7280'}} axisLine={false} tickLine={false} />
                         <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'}} />
                         <Legend iconType="circle" wrapperStyle={{fontSize: '11px', paddingTop: '20px'}} />
-                        <Bar dataKey="fund" name="Fund Available" fill="#9ca3af" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="exp" name="Total Expenditure" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="totalTrainees" name="Total Trainees" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                {/* Chart 2: Pending Liabilities (Payment Due) */}
+                {/* Chart 2: Batches Run per Program */}
                 <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                  <h2 className="text-lg font-bold text-gray-800 mb-4">Pending Liabilities (Payment Due)</h2>
+                  <h2 className="text-lg font-bold text-gray-800 mb-4">Number of Batches per Program</h2>
                   <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analytics.chartData} margin={{ top: 10, right: 10, left: 10, bottom: 60 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                        <XAxis dataKey="name" tick={{fontSize: 10, fill: '#6b7280'}} axisLine={false} tickLine={false} angle={-45} textAnchor="end" />
+                        <XAxis dataKey="shortName" tick={{fontSize: 10, fill: '#6b7280'}} axisLine={false} tickLine={false} angle={-45} textAnchor="end" />
                         <YAxis tick={{fontSize: 10, fill: '#6b7280'}} axisLine={false} tickLine={false} />
                         <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'}} />
-                        <Bar dataKey="due" name="Payment Due" radius={[4, 4, 0, 0]}>
+                        <Legend iconType="circle" wrapperStyle={{fontSize: '11px', paddingTop: '20px'}} />
+                        <Bar dataKey="batchCount" name="Batches Conducted" fill="#10b981" radius={[4, 4, 0, 0]}>
                            {analytics.chartData.map((entry, index) => (
-                             <Cell key={`cell-${index}`} fill={entry.due > 200 ? '#ef4444' : entry.due > 50 ? '#f59e0b' : '#10b981'} />
+                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                            ))}
                         </Bar>
                       </BarChart>
@@ -246,39 +262,30 @@ function MnregaDashboard() {
               {/* Data Table */}
               <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-                  <h2 className="text-lg font-bold text-gray-800">Complete Block Records</h2>
-                  <input type="text" placeholder={`Search Block Name...`} className="border border-gray-300 p-2 rounded-lg w-full md:w-64 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  <h2 className="text-lg font-bold text-gray-800">Complete Training Batch Records</h2>
+                  <input type="text" placeholder={`Search Programme Name...`} className="border border-gray-300 p-2 rounded-lg w-full md:w-64 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                 </div>
                 <div className="overflow-x-auto rounded-lg border border-gray-200 max-h-[500px]">
                   <table className="w-max min-w-full text-left text-sm whitespace-nowrap">
                     <thead className="bg-gray-100 text-gray-600 sticky top-0 z-10 shadow-sm">
                       <tr>
-                        {analytics.headers.map((h, i) => {
-                          if (!h) return null;
-                          return (
-                            <th key={i} className="px-4 py-3 font-bold border-r border-gray-200">
-                                {analytics.formatHeader(h)}
-                            </th>
-                          )
-                        })}
+                        <th className="px-4 py-3 font-bold border-r border-gray-200">Programme Name</th>
+                        <th className="px-4 py-3 font-bold border-r border-gray-200 text-center">Start Date</th>
+                        <th className="px-4 py-3 font-bold border-r border-gray-200 text-center">End Date</th>
+                        <th className="px-4 py-3 font-bold border-r border-gray-200 text-center">Duration (Days)</th>
+                        <th className="px-4 py-3 font-bold text-center">Total Trainees</th>
                       </tr>
                     </thead>
                     <tbody>
                       {analytics.filteredRows.map((row, rIdx) => (
                         <tr key={rIdx} className="border-b border-gray-100 hover:bg-blue-50 transition-colors">
-                          {analytics.headers.map((h, cIdx) => {
-                             if (!h) return null;
-                             const val = row.rawRow[cIdx];
-                             
-                             // Check if the value is negative to color it red
-                             const isNegativeNumber = !isNaN(val) && parseFloat(val) < 0;
-
-                             return (
-                               <td key={cIdx} className={`px-4 py-3 border-r border-gray-100 ${cIdx === analytics.labelColIdx ? 'font-semibold text-gray-800 sticky left-0 bg-white z-0 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : 'text-gray-600'} ${isNegativeNumber ? 'text-red-600 font-bold' : ''}`}>
-                                 {val || "-"}
-                               </td>
-                             )
-                          })}
+                          <td className="px-4 py-3 font-semibold text-gray-800 sticky left-0 bg-white z-0 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-r border-gray-100">
+                             {row.name}
+                          </td>
+                          <td className="px-4 py-3 text-center text-gray-600 border-r border-gray-100">{row.start}</td>
+                          <td className="px-4 py-3 text-center text-gray-600 border-r border-gray-100">{row.end}</td>
+                          <td className="px-4 py-3 text-center text-gray-600 border-r border-gray-100">{row.days > 0 ? row.days : "-"}</td>
+                          <td className="px-4 py-3 text-center font-bold text-blue-600">{row.trainees > 0 ? row.trainees : "-"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -288,7 +295,7 @@ function MnregaDashboard() {
             </>
           ) : (
              <div className="flex justify-center items-center h-64 text-lg font-bold text-gray-500 bg-white rounded-xl shadow-sm border border-gray-200">
-               We couldn't structure this sheet. Ensure row 1 contains the database column headers.
+               We couldn't structure this sheet. Ensure row 2 contains the header columns.
              </div>
           )}
 
@@ -307,4 +314,4 @@ function MetricCard({ title, value, color }) {
   );
 }
 
-export default MnregaDashboard;
+export default RsetiDashboard;
